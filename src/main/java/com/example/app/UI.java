@@ -7,6 +7,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
+import java.util.HashMap;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -14,7 +17,6 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
-import javax.swing.Timer;
 
 public class UI
 {
@@ -23,6 +25,12 @@ public class UI
     private Font normalFont = new Font("Times New Roman", Font.PLAIN, 20);
     private JPanel gameTitlePanel = new JPanel();
     private JLabel gameTitleLabel = new JLabel("COOKIE-CLICKER");
+    private JPanel namePanel = new JPanel();
+    private JLabel nameLabel = new JLabel("What is your name?");
+    private JPanel inputPanel = new JPanel();
+    private JTextArea inputText = new JTextArea();
+    private JPanel startButtonPanel = new JPanel();
+    private JButton startButton = new JButton("START");
     private JPanel gameTitleButtons = new JPanel();
     private JButton newGameButton = new JButton("NEW GAME");
     private JButton loadGameButton = new JButton("LOAD GAME");
@@ -34,12 +42,16 @@ public class UI
     private JPanel descriptionPanel = new JPanel();
     private ImageIcon cookieImage = new ImageIcon("src/res/cookie.png");
     private JButton cookieButton = new JButton();
-    private JLabel scoreLabel = new JLabel("Cookies: 0");
+    private JLabel scoreLabel = new JLabel();
     private JButton firstPowerup = new JButton("Friend (10 left)");
     private JButton secondPowerup = new JButton("Employee (10 left)");
     private JButton thirdPowerup = new JButton("Cookie Machine (10 left)");
     private JButton fourthPowerup = new JButton("Factory (10 left)");
     private JTextArea descriptionText = new JTextArea();
+    private SQL sql = new SQL();
+    private Cookie cookie = new Cookie();
+    private Powerup powerup = new Powerup();
+    private Player player = new Player();
 
     public void drawTitleScreen(){
         window.setSize(800, 600);
@@ -47,6 +59,39 @@ public class UI
         window.getContentPane().setBackground(Color.white);
         window.setLayout(null);
         window.setResizable(false);
+
+        window.addWindowListener(new WindowListener() {
+
+            @Override
+            public void windowActivated(WindowEvent arg0) {
+            }
+
+            @Override
+            public void windowClosed(WindowEvent arg0) {
+            }
+
+            @Override
+            public void windowClosing(WindowEvent arg0) {
+                sql.savePlayerData(player.getName(), cookie.getCount(), powerup.getFirstPowerupCounter(), powerup.getSecondPowerupCounter(), powerup.getThirdPowerupCounter(), powerup.getFourthPowerupCounter());
+            }
+
+            @Override
+            public void windowDeactivated(WindowEvent arg0) {
+            }
+
+            @Override
+            public void windowDeiconified(WindowEvent arg0) {
+            }
+
+            @Override
+            public void windowIconified(WindowEvent arg0) {
+            }
+
+            @Override
+            public void windowOpened(WindowEvent arg0) {
+            }
+            
+        });
         
         gameTitlePanel.setBounds(100, 100, 600, 500);
         gameTitlePanel.setBackground(Color.white);
@@ -76,6 +121,14 @@ public class UI
         loadGameButton.setForeground(Color.black);
         loadGameButton.setFont(normalFont);
         loadGameButton.setFocusPainted(false);
+        loadGameButton.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent arg0) {
+                showInputScreen();
+            }
+            
+        });
 
         LeaderboardButton.setBackground(Color.white);
         LeaderboardButton.setForeground(Color.black);
@@ -104,7 +157,7 @@ public class UI
         window.setVisible(true);
     }
 
-    public void drawGameScreen(final Cookie cookie, final Powerup powerup){
+    public void drawGameScreen(){
         window.setSize(800, 600);
         window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         window.getContentPane().setBackground(Color.white);
@@ -308,9 +361,69 @@ public class UI
 
     }
 
+    public void drawInputScreen(){
+        window.setSize(800, 600);
+        window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        window.getContentPane().setBackground(Color.white);
+        window.setLayout(null);
+        window.setResizable(false);
+        
+        namePanel.setBounds(100, 100, 600, 500);
+        namePanel.setBackground(Color.white);
+        nameLabel.setBackground(Color.black);
+        nameLabel.setFont(normalFont);
+        namePanel.add(nameLabel);
+        window.add(namePanel);
+
+        inputPanel.setBounds(300, 200, 200, 100);
+        inputPanel.setBackground(Color.white);
+        window.add(inputPanel);
+        inputText.setBounds(300, 200, 200, 100);
+        inputText.setForeground(Color.black);
+        inputText.setBackground(Color.white);
+        inputText.setLineWrap(true);
+        inputText.setWrapStyleWord(true);
+        inputText.setEditable(true);
+        inputPanel.add(inputText);
+
+        startButtonPanel.setBounds(100, 300, 600, 100);
+        startButtonPanel.setBackground(Color.white);
+        window.add(startButtonPanel);
+        startButton.setBackground(Color.white);
+        startButton.setForeground(Color.black);
+        startButton.setFont(normalFont);
+        startButton.setFocusPainted(false);
+        startButtonPanel.add(startButton);
+        startButton.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent arg0) {
+                String playername = inputText.getText();
+                HashMap<String,String> playerdata = sql.getPlayerData(playername);
+                player.setName(playerdata.get("playername"));
+                cookie.setCount(Integer.parseInt(playerdata.get("cookiecount")));
+                powerup.setFirstPowerupCounter(Integer.parseInt(playerdata.get("friendcount")));
+                powerup.setSecondPowerupCounter(Integer.parseInt(playerdata.get("employeecount")));
+                powerup.setThirdPowerupCounter(Integer.parseInt(playerdata.get("machinecount")));
+                powerup.setFourthPowerupCounter(Integer.parseInt(playerdata.get("factorycount")));
+
+                scoreLabel.setText("Cookies:" + cookie.getCount());
+
+                showGameScreen();
+            }
+        });
+
+        window.setVisible(true);
+    }
+
     public void showTitleScreen(){
         gameTitlePanel.setVisible(true);
         gameTitleButtons.setVisible(true); 
+
+        namePanel.setVisible(false);
+        nameLabel.setVisible(false);
+        inputPanel.setVisible(false);
+        startButtonPanel.setVisible(false);
 
         cookiePanel.setVisible(false);
         scorePanel.setVisible(false);
@@ -326,5 +439,25 @@ public class UI
 
         gameTitlePanel.setVisible(false);
         gameTitleButtons.setVisible(false); 
+
+        namePanel.setVisible(false);
+        nameLabel.setVisible(false);
+        inputPanel.setVisible(false);
+        startButtonPanel.setVisible(false);
+    }
+
+    public void showInputScreen(){
+        namePanel.setVisible(true);
+        nameLabel.setVisible(true);
+        inputPanel.setVisible(true);
+        startButtonPanel.setVisible(true);
+
+        gameTitlePanel.setVisible(false);
+        gameTitleButtons.setVisible(false); 
+
+        cookiePanel.setVisible(false);
+        scorePanel.setVisible(false);
+        powerupPanel.setVisible(false);
+        descriptionPanel.setVisible(false);
     }
 }
