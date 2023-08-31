@@ -63,6 +63,8 @@ public class Powerup{
 
     public void setTimer(final Cookie cookie, final JLabel scoreLabel){
         int value = (int) Math.round(1/perSecond*1000);
+        System.out.println(value);
+        System.out.println(perSecond);
         final Timer timer = new Timer(value, new ActionListener() {
 
             @Override

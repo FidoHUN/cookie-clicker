@@ -28,6 +28,7 @@ public class SQL{
                 int employeecount = resultSet.getInt(5);
                 int machinecount = resultSet.getInt(6);
                 int factorycount = resultSet.getInt(7);
+                double persecond = resultSet.getDouble(8);
 
                 ret.put("playername", name);
                 ret.put("cookiecount", Integer.toString(cookiecount));
@@ -35,24 +36,42 @@ public class SQL{
                 ret.put("employeecount", Integer.toString(employeecount));
                 ret.put("machinecount", Integer.toString(machinecount));
                 ret.put("factorycount", Integer.toString(factorycount));
+                ret.put("persecond", String.valueOf(persecond));
                 
             }
             connection.close();
+            System.out.println(ret);
         } catch (Exception e) {
             System.out.println(e);
         }
         return ret;
     }
 
-    public void savePlayerData(String playername, int cookiecount, int friendcount, int employeecount, int machinecount, int factorycount){
+    public void savePlayerData(String playername, int cookiecount, int friendcount, int employeecount, int machinecount, int factorycount, double persecond){
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
             Connection connection = DriverManager.getConnection(
                     "jdbc:mysql://localhost:3306/cookie-clicker", username, password
                     );
             Statement statement = connection.createStatement();
-            int updatedRows = statement.executeUpdate("update data set cookiecount=" + cookiecount + ", friendcount=" + friendcount + ", employeecount=" + employeecount + ", machinecount=" + machinecount + ", factorycount=" + factorycount + " where playername='" + playername + "'");
+            int updatedRows = statement.executeUpdate("update data set cookiecount=" + cookiecount + ", friendcount=" + friendcount + ", employeecount=" + employeecount + ", machinecount=" + machinecount + ", factorycount=" + factorycount + ", persecond=" + persecond + " where playername='" + playername + "'");
             System.out.println(updatedRows);
+            connection.close();
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+    }
+
+    public void addNewPlayer(String playername, int cookiecount, int friendcount, int employeecount, int machinecount, int factorycount, double persecond){
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            Connection connection = DriverManager.getConnection(
+                    "jdbc:mysql://localhost:3306/cookie-clicker", username, password
+                    );
+            Statement statement = connection.createStatement();
+            int insertedRows = statement.executeUpdate("insert into data values(default,'" + playername + "'," + cookiecount + "," + friendcount + "," + employeecount + "," + machinecount + "," + factorycount + "," + persecond + ")");
+            System.out.println(insertedRows);
+            connection.close();
         } catch (Exception e) {
             System.out.println(e);
         }

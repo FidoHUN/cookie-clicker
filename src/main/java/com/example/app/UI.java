@@ -15,6 +15,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 
@@ -52,6 +53,7 @@ public class UI
     private Cookie cookie = new Cookie();
     private Powerup powerup = new Powerup();
     private Player player = new Player();
+    private boolean isNewGame = false;
 
     public void drawTitleScreen(){
         window.setSize(800, 600);
@@ -72,7 +74,7 @@ public class UI
 
             @Override
             public void windowClosing(WindowEvent arg0) {
-                sql.savePlayerData(player.getName(), cookie.getCount(), powerup.getFirstPowerupCounter(), powerup.getSecondPowerupCounter(), powerup.getThirdPowerupCounter(), powerup.getFourthPowerupCounter());
+                sql.savePlayerData(player.getName(), cookie.getCount(), powerup.getFirstPowerupCounter(), powerup.getSecondPowerupCounter(), powerup.getThirdPowerupCounter(), powerup.getFourthPowerupCounter(), powerup.getPerSecond());
             }
 
             @Override
@@ -112,7 +114,8 @@ public class UI
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                showGameScreen();
+                isNewGame = true;
+                showInputScreen();
             }
             
         });
@@ -400,20 +403,65 @@ public class UI
             public void actionPerformed(ActionEvent arg0) {
                 String playername = inputText.getText();
                 HashMap<String,String> playerdata = sql.getPlayerData(playername);
-                player.setName(playerdata.get("playername"));
-                cookie.setCount(Integer.parseInt(playerdata.get("cookiecount")));
-                powerup.setFirstPowerupCounter(Integer.parseInt(playerdata.get("friendcount")));
-                powerup.setSecondPowerupCounter(Integer.parseInt(playerdata.get("employeecount")));
-                powerup.setThirdPowerupCounter(Integer.parseInt(playerdata.get("machinecount")));
-                powerup.setFourthPowerupCounter(Integer.parseInt(playerdata.get("factorycount")));
+                if(!isNewGame){
+                    if(playerdata.size()>0){
+                        player.setName(playerdata.get("playername"));
+                        cookie.setCount(Integer.parseInt(playerdata.get("cookiecount")));
+                        powerup.setFirstPowerupCounter(Integer.parseInt(playerdata.get("friendcount")));
+                        powerup.setSecondPowerupCounter(Integer.parseInt(playerdata.get("employeecount")));
+                        powerup.setThirdPowerupCounter(Integer.parseInt(playerdata.get("machinecount")));
+                        powerup.setFourthPowerupCounter(Integer.parseInt(playerdata.get("factorycount")));
+                        powerup.setPerSecond(Double.parseDouble(playerdata.get("persecond")));
 
-                scoreLabel.setText("Cookies:" + cookie.getCount());
+                        scoreLabel.setText("Cookies:" + cookie.getCount());
+                        firstPowerup.setText("Friend (" + (10-powerup.getFirstPowerupCounter()) + " left)");
+                        secondPowerup.setText("Employee (" + (10-powerup.getSecondPowerupCounter()) + " left)");
+                        thirdPowerup.setText("Cookie Machine (" + (10-powerup.getThirdPowerupCounter()) + " left)");
+                        fourthPowerup.setText("Factory (" + (10-powerup.getFourthPowerupCounter()) + " left)");
+                        powerup.setTimer(cookie, scoreLabel);
 
-                showGameScreen();
+                        showGameScreen();
+                    }else{
+                        infoBox("There is no such name in our database!", "Error");
+                        inputText.setText(null);
+
+                        showTitleScreen();
+                    }
+                }else{
+                    if(playerdata.size()>0){
+                        infoBox("This name is already taken!", "Error");
+                        inputText.setText(null);
+
+                        showTitleScreen();
+                    }else{
+                        player.setName(playername);
+                        cookie.setCount(0);
+                        powerup.setFirstPowerupCounter(0);
+                        powerup.setSecondPowerupCounter(0);
+                        powerup.setThirdPowerupCounter(0);
+                        powerup.setFourthPowerupCounter(0);
+                        powerup.setPerSecond(0.0);
+
+                        scoreLabel.setText("Cookies:" + cookie.getCount());
+                        firstPowerup.setText("Friend (" + (10-powerup.getFirstPowerupCounter()) + " left)");
+                        secondPowerup.setText("Employee (" + (10-powerup.getSecondPowerupCounter()) + " left)");
+                        thirdPowerup.setText("Cookie Machine (" + (10-powerup.getThirdPowerupCounter()) + " left)");
+                        fourthPowerup.setText("Factory (" + (10-powerup.getFourthPowerupCounter()) + " left)");
+
+                        sql.addNewPlayer(playername, 0, 0, 0, 0, 0, 0.0);
+
+                        showGameScreen();
+                    }
+                }
             }
         });
 
         window.setVisible(true);
+    }
+
+    public void infoBox(String infoMessage, String titleBar)
+    {
+        JOptionPane.showMessageDialog(null, infoMessage, "InfoBox: " + titleBar, JOptionPane.INFORMATION_MESSAGE);
     }
 
     public void showTitleScreen(){
